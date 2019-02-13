@@ -102,16 +102,41 @@ def replace_character_references(match_object) -> str:
 
 	return retval
 
-def format_xhtml(xhtml: str, single_lines: bool = False, is_metadata_file: bool = False, is_endnotes_file: bool = False) -> str:
+def format_xhtml_file(filename: str, single_lines: bool = False, is_metadata_file: bool = False, is_endnotes_file: bool = False) -> None:
 	"""
-	Render a string of MathML into a transparent PNG file.
+	Pretty-print well-formed XHTML and save to file.
 
 	INPUTS
-	mathml: A string of MathML
-	output_filename: A filename to store PNG output to
+	filename: A file containing well-formed XHTML
+	single_lines: True to collapse hard-wrapped line breaks, like those found at Project Gutenberg, to single lines
+	is_metadata_file: True if the passed XHTML is an SE content.opf metadata file
+	is_endnotes_file: True if the passed XHTML is an SE endnotes file
 
 	OUTPUTS
-	A string of XHTML with soft hyphens inserted in words. The output is not guaranteed to be pretty-printed.
+	None.
+	"""
+	with open(filename, "r+", encoding="utf-8") as file:
+		xhtml = file.read()
+
+		processed_xhtml = se.formatting.format_xhtml(xhtml, single_lines, is_metadata_file, is_endnotes_file)
+
+		if processed_xhtml != xhtml:
+			file.seek(0)
+			file.write(processed_xhtml)
+			file.truncate()
+
+def format_xhtml(xhtml: str, single_lines: bool = False, is_metadata_file: bool = False, is_endnotes_file: bool = False) -> str:
+	"""
+	Pretty-print well-formed XHTML.
+
+	INPUTS
+	xhtml: A string of well-formed XHTML
+	single_lines: True to collapse hard-wrapped line breaks, like those found at Project Gutenberg, to single lines
+	is_metadata_file: True if the passed XHTML is an SE content.opf metadata file
+	is_endnotes_file: True if the passed XHTML is an SE endnotes file
+
+	OUTPUTS
+	A string of pretty-printed XHTML.
 	"""
 
 	xmllint_path = shutil.which("xmllint")

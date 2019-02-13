@@ -14,23 +14,11 @@ def main() -> int:
 	parser.add_argument("targets", metavar="TARGET", nargs="+", help="an XHTML file, or a directory containing XHTML files")
 	args = parser.parse_args()
 
-	for filename in se.get_target_filenames(args.targets, None):
+	for filename in se.get_target_filenames(args.targets, (".xhtml")):
 		if args.verbose:
 			print("Processing {} ...".format(filename), end="", flush=True)
 
-		with open(filename, "r+") as file:
-			xhtml = file.read()
-
-			try:
-				processed_xhtml = se.typography.hyphenate(xhtml, args.language, args.ignore_h_tags)
-			except se.SeException as ex:
-				se.print_error(ex, args.verbose)
-				return ex.code
-
-			if processed_xhtml != xhtml:
-				file.seek(0)
-				file.write(processed_xhtml)
-				file.truncate()
+		se.typography.hyphenate_file(filename, args.language, args.ignore_h_tags)
 
 		if args.verbose:
 			print(" OK")

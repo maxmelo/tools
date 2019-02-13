@@ -2,7 +2,6 @@
 
 import sys
 import argparse
-import shutil
 import se
 import se.formatting
 
@@ -22,20 +21,11 @@ def main() -> int:
 		if args.verbose:
 			print("Processing {} ...".format(filename), end="", flush=True)
 
-		with open(filename, "r+", encoding="utf-8") as file:
-			xhtml = file.read()
-			processed_xhtml = xhtml
-
-			try:
-				processed_xhtml = se.formatting.format_xhtml(xhtml, args.single_lines, filename.endswith("content.opf"), filename.endswith("endnotes.xhtml"))
-			except se.SeException as ex:
-				se.print_error(ex, args.verbose)
-				return ex.code
-
-			if processed_xhtml != xhtml:
-				file.seek(0)
-				file.write(processed_xhtml)
-				file.truncate()
+		try:
+			se.formatting.format_xhtml_file(filename, args.single_lines, filename.endswith("content.opf"), filename.endswith("endnotes.xhtml"))
+		except se.SeException as ex:
+			se.print_error(ex, args.verbose)
+			return ex.code
 
 		if args.verbose:
 			print(" OK")

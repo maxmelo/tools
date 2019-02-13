@@ -21,6 +21,7 @@ import se.formatting
 import se.easy_xml
 import se.epub
 import se.mobi
+import se.typography
 
 
 COVER_SVG_WIDTH = 1400
@@ -198,8 +199,6 @@ def main() -> int:
 		ebook_convert_path = os.path.join(calibre_app_mac_path, "ebook-convert")
 	rsvg_convert_path = shutil.which("rsvg-convert")
 	convert_path = shutil.which("convert")
-	clean_path = os.path.join(script_directory, "clean")
-	hyphenate_path = os.path.join(script_directory, "hyphenate")
 	toc2ncx_xsl_filename = os.path.join(script_directory, "data", "navdoc2ncx.xsl")
 	mathml_xsl_filename = os.path.join(script_directory, "data", "mathmlcontent2presentation.xsl")
 
@@ -858,7 +857,12 @@ def main() -> int:
 			file.truncate()
 
 		# All done, clean the output
-		subprocess.run([clean_path, work_epub_root_directory])
+		for filename in se.get_target_filenames([work_epub_root_directory], (".xhtml", ".svg", ".opf", ".ncx")):
+			try:
+				se.formatting.format_xhtml_file(filename, False, filename.endswith("content.opf"), filename.endswith("endnotes.xhtml"))
+			except se.SeException as ex:
+				se.print_error(ex, args.verbose)
+				return ex.code
 
 		# Write the compatible epub
 		se.epub.write_epub(work_epub_root_directory, os.path.join(output_directory, epub_output_filename))
@@ -922,7 +926,12 @@ def main() -> int:
 			toc_tree = se.epub.convert_toc_to_ncx(work_epub_root_directory, toc_filename, toc2ncx_xsl_filename)
 
 			# Clean just the ToC and NCX
-			subprocess.run([clean_path, os.path.join(work_epub_root_directory, "epub", "toc.ncx"), os.path.join(work_epub_root_directory, "epub", toc_filename)])
+			for filename in [os.path.join(work_epub_root_directory, "epub", "toc.ncx"), os.path.join(work_epub_root_directory, "epub", toc_filename)]:
+				try:
+					se.formatting.format_xhtml_file(filename, False)
+				except se.SeException as ex:
+					se.print_error(ex, args.verbose)
+					return ex.code
 
 			# Convert endnotes to Kindle popup compatible notes
 			if os.path.isfile(os.path.join(work_epub_root_directory, "epub", "text", "endnotes.xhtml")):
@@ -1018,7 +1027,12 @@ def main() -> int:
 					core_css_file.write(compatibility_css_file.read())
 
 			# Add soft hyphens
-			subprocess.run([hyphenate_path, "--ignore-h-tags", work_epub_root_directory])
+			for filename in se.get_target_filenames([work_epub_root_directory], (".xhtml")):
+				try:
+					se.typography.hyphenate_file(filename, None, True)
+				except se.SeException as ex:
+					se.print_error(ex, args.verbose)
+					return ex.code
 
 			# Build an epub file we can send to Calibre
 			se.epub.write_epub(work_epub_root_directory, os.path.join(work_directory, epub_output_filename))
@@ -1046,6 +1060,7 @@ def main() -> int:
 			if args.verbose:
 				print(" OK")
 
+	return 0
 
 if __name__ == "__main__":
 	sys.exit(main())

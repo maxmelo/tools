@@ -15,9 +15,11 @@ def main() -> int:
 	try:
 		se_epub = SeEpub(args.directory, os.path.dirname(os.path.realpath(__file__)))
 		print(se_epub.recompose())
-	except (OSError, se.SeException) as ex:
+	except se.SeException as ex:
 		se.print_error(ex)
-		exit(1)
+		return ex.code
+
+	return 0
 
 
 if __name__ == "__main__":

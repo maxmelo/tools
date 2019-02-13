@@ -6,6 +6,27 @@ from hyphen.dictools import list_installed
 from bs4 import BeautifulSoup
 import se
 
+def hyphenate_file(filename: str, language: str, ignore_h_tags: bool = False) -> None:
+	"""
+	Add soft hyphens to an XHTML file.
+
+	INPUTS
+	filename: A filename containing well-formed XHTML.
+	language: An ISO language code, like en-US, or None to auto-detect based on XHTML input
+	ignore_h_tags: True to not hyphenate within <h1-6> tags
+
+	OUTPUTS
+	None.
+	"""
+	with open(filename, "r+") as file:
+		xhtml = file.read()
+
+		processed_xhtml = se.typography.hyphenate(xhtml, language, ignore_h_tags)
+
+		if processed_xhtml != xhtml:
+			file.seek(0)
+			file.write(processed_xhtml)
+			file.truncate()
 
 def hyphenate(xhtml: str, language: str, ignore_h_tags: bool = False) -> str:
 	"""
@@ -37,7 +58,7 @@ def hyphenate(xhtml: str, language: str, ignore_h_tags: bool = False) -> str:
 		if language not in hyphenators:
 			hyphenators[language] = Hyphenator(language)
 	except Exception:
-		raise se.InvalidLanguageException("Hyphenator for language \"{}\" not available.\nInstalled hyphenators: {}".format(language, list_installed()))
+		raise se.MissingDependencyException("Hyphenator for language \"{}\" not available.\nInstalled hyphenators: {}".format(language, list_installed()))
 
 	text = str(soup.body)
 	result = text
