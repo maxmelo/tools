@@ -9,13 +9,13 @@ import subprocess
 import unicodedata
 import io
 import regex
-import se
-import se.formatting
-import se.easy_xml
 import roman
 import lxml.cssselect
 import lxml.etree as etree
 from bs4 import Tag, BeautifulSoup, NavigableString
+import se
+import se.formatting
+import se.easy_xml
 
 
 class LintMessage:

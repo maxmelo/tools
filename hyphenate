@@ -3,7 +3,8 @@
 import sys
 import argparse
 import se
-import se.formatting
+import se.typography
+
 
 def main() -> int:
 	parser = argparse.ArgumentParser(description="Insert soft hyphens at syllable breaks in XHTML files.")
@@ -21,7 +22,7 @@ def main() -> int:
 			xhtml = file.read()
 
 			try:
-				processed_xhtml = se.formatting.hyphenate(xhtml, args.language, args.ignore_h_tags)
+				processed_xhtml = se.typography.hyphenate(xhtml, args.language, args.ignore_h_tags)
 			except se.SeException as ex:
 				se.print_error(ex, args.verbose)
 				return ex.code
@@ -35,6 +36,7 @@ def main() -> int:
 			print(" OK")
 
 	return 0
+
 
 if __name__ == "__main__":
 	sys.exit(main())

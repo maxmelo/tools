@@ -14,13 +14,6 @@ def main() -> int:
 	parser.add_argument("targets", metavar="TARGET", nargs="+", help="an XHTML or SVG file, or a directory containing XHTML or SVG files")
 	args = parser.parse_args()
 
-	# Check for required utilities
-	xmllint_path = shutil.which("xmllint")
-
-	if xmllint_path is None:
-		se.print_error("Couldn’t locate xmllint. Is it installed?")
-		return se.MissingDependencyException.code
-
 	for filename in se.get_target_filenames(args.targets, (".xhtml", ".svg", ".opf", ".ncx")):
 		# If we're setting single lines, skip the colophon and cover/titlepage svgs, as they have special spacing
 		if args.single_lines and (filename.endswith("colophon.xhtml") or filename.endswith("cover.svg") or filename.endswith("titlepage.svg")):
@@ -34,7 +27,7 @@ def main() -> int:
 			processed_xhtml = xhtml
 
 			try:
-				processed_xhtml = se.formatting.format_xhtml(xhtml, xmllint_path, args.single_lines, filename.endswith("content.opf"), filename.endswith("endnotes.xhtml"))
+				processed_xhtml = se.formatting.format_xhtml(xhtml, args.single_lines, filename.endswith("content.opf"), filename.endswith("endnotes.xhtml"))
 			except se.SeException as ex:
 				se.print_error(ex, args.verbose)
 				return ex.code
@@ -48,6 +41,7 @@ def main() -> int:
 			print(" OK")
 
 	return 0
+
 
 if __name__ == "__main__":
 	sys.exit(main())

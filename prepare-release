@@ -101,6 +101,8 @@ def main() -> int:
 				file.write(processed_xhtml)
 				file.truncate()
 
+	return 0
+
 
 if __name__ == "__main__":
 	sys.exit(main())

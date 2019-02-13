@@ -16,15 +16,17 @@ def main() -> int:
 
 	try:
 		se_epub = SeEpub(args.directory, os.path.dirname(os.path.realpath(__file__)))
-	except Exception as ex:
+	except se.SeException as ex:
 		se.print_error(ex)
-		exit(1)
+		return ex.code
 
 	if args.spine:
 		print(se_epub.generate_manifest())
 
 	if args.manifest:
 		print(se_epub.generate_spine())
+
+	return 0
 
 
 if __name__ == "__main__":

@@ -4,8 +4,8 @@ import sys
 import argparse
 import os
 import fnmatch
-import regex
 import se
+import se.formatting
 
 
 def main() -> int:
@@ -34,27 +34,12 @@ def main() -> int:
 
 			try:
 				with open(filename, "r", encoding="utf-8") as file:
-					html = file.read()
+					xhtml = file.read()
 			except Exception:
 				se.print_error("Couldn’t open file: {}".format(filename))
 				exit(1)
 
-			# Remove HTML tags
-			text = regex.sub(r"<title>.+?</title>", " ", html)
-			text = regex.sub(r"<.+?>", "", text, flags=regex.DOTALL)
-
-			# Replace some formatting characters
-			text = regex.sub(r"[…–—― ‘’“”\{\}\(\)]", " ", text, flags=regex.IGNORECASE | regex.DOTALL)
-
-			# Remove word-connecting dashes, apostrophes, commas, and slashes (and/or), they count as a word boundry but they shouldn't
-			text = regex.sub(r"[a-z0-9][\-\'\,\.\/][a-z0-9]", "aa", text, flags=regex.IGNORECASE | regex.DOTALL)
-
-			# Replace sequential spaces with one space
-			text = regex.sub(r"\s+", " ", text, flags=regex.IGNORECASE | regex.DOTALL)
-
-			# Get the word count
-			word_count = len(regex.findall(r"\b\w+\b", text, flags=regex.IGNORECASE | regex.DOTALL))
-
+			word_count = se.formatting.word_count(xhtml)
 			word_count_sum += word_count
 
 			if args.verbose:
@@ -67,6 +52,8 @@ def main() -> int:
 				print("{}\t{}\t{}".format(filename, word_count, category))
 
 	print(word_count_sum)
+
+	return 0
 
 
 if __name__ == "__main__":

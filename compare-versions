@@ -26,16 +26,16 @@ def main() -> int:
 	# Check for some required tools.
 	if firefox_path is None:
 		se.print_error("Couldn’t locate firefox. Is it installed?")
-		exit(1)
+		return se.MissingDependencyException.code
 
 	if compare_path is None:
 		se.print_error("Couldn’t locate compare. Is imagemagick installed?")
-		exit(1)
+		return se.MissingDependencyException.code
 
 	# Firefox won't start in headless mode if there is another Firefox process running; check that here.
 	if "firefox" in (p.name() for p in psutil.process_iter()):
-		se.print_error("firefox is required to process MathML, but firefox is currently running. Close all instances of firefox and try again.")
-		exit(1)
+		se.print_error("Firefox is required, but it’s currently running. Stop all instances of Firefox and try again.")
+		return se.FirefoxRunningException.code
 
 	for target in args.targets:
 		target = os.path.abspath(target)
@@ -91,6 +91,8 @@ def main() -> int:
 							shutil.copy("{}/{}-diff.png".format(temp_directory_path, filename_basename), output_directory)
 						except Exception:
 							pass
+	return 0
+
 
 if __name__ == "__main__":
 	sys.exit(main())
