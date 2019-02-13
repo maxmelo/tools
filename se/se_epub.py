@@ -5,7 +5,7 @@ import filecmp
 import glob
 import html
 import tempfile
-import subprocess
+import datetime
 import unicodedata
 import io
 import regex
@@ -351,8 +351,6 @@ class SeEpub:
 		A string of HTML5 representing the entire recomposed ebook.
 		"""
 
-		clean_path = os.path.join(self.__tools_root_directory, "clean")
-
 		# Get the ordered list of spine items
 		with open(os.path.join(self.directory, "src", "epub", "content.opf"), "r", encoding="utf-8") as file:
 			metadata_soup = BeautifulSoup(file.read(), "lxml")
@@ -408,7 +406,7 @@ class SeEpub:
 		os.rename(file_name, file_name_xhtml)
 
 		# All done, clean the output
-		subprocess.run([clean_path, file_name_xhtml])
+		se.formatting.format_xhtml_file(file_name_xhtml, False, file_name_xhtml.endswith("content.opf"), file_name_xhtml.endswith("endnotes.xhtml"))
 
 		with open(file_name_xhtml) as file:
 			xhtml = file.read()
@@ -430,6 +428,122 @@ class SeEpub:
 		os.remove(file_name_xhtml)
 
 		return xhtml
+
+	def update_revision(self) -> None:
+		"""
+		Update the revision number and updated date in the metadata and colophon.
+
+		INPUTS
+		None
+
+		OUTPUTS
+		None.
+		"""
+
+		timestamp = datetime.datetime.utcnow()
+		iso_timestamp = regex.sub(r"\.[0-9]+$", "", timestamp.isoformat()) + "Z"
+
+		# Construct the friendly timestamp
+		friendly_timestamp = "{0:%B %e, %Y, %l:%M <abbr class=\"time eoc\">%p</abbr>}".format(timestamp)
+		friendly_timestamp = regex.sub(r"\s+", " ", friendly_timestamp).replace("AM", "a.m.").replace("PM", "p.m.").replace(" <abbr", " <abbr")
+
+		with open(os.path.join(self.directory, "src", "epub", "content.opf"), "r+", encoding="utf-8") as file:
+			xhtml = file.read()
+
+			# Calculate the new revision number
+			revision = int(regex.search(r"<meta property=\"se:revision-number\">([0-9]+)</meta>", xhtml).group(1))
+			revision = revision + 1
+
+			# If this is an initial release, set the release date in content.opf
+			if revision == 1:
+				xhtml = regex.sub(r"<dc:date>[^<]+?</dc:date>", "<dc:date>{}</dc:date>".format(iso_timestamp), xhtml)
+
+			# Set modified date and revision number in content.opf
+			xhtml = regex.sub(r"<meta property=\"dcterms:modified\">[^<]+?</meta>", "<meta property=\"dcterms:modified\">{}</meta>".format(iso_timestamp), xhtml)
+			xhtml = regex.sub(r"<meta property=\"se:revision-number\">[^<]+?</meta>", "<meta property=\"se:revision-number\">{}</meta>".format(revision), xhtml)
+
+			file.seek(0)
+			file.write(xhtml)
+			file.truncate()
+
+		# Update the colophon with release info
+		with open(os.path.join(self.directory, "src", "epub", "text", "colophon.xhtml"), "r+", encoding="utf-8") as file:
+			xhtml = file.read()
+
+			# Are we moving from the first edition to the nth edition?
+			if revision == 1:
+				xhtml = regex.sub(r"<span class=\"release-date\">.+?</span>", "<span class=\"release-date\">{}</span>".format(friendly_timestamp), xhtml)
+			else:
+				ordinal = se.formatting.get_ordinal(revision)
+				if "<p>This is the first edition of this ebook.<br/>" in xhtml:
+					xhtml = xhtml.replace("This edition was released on<br/>", "The first edition was released on<br/>")
+					xhtml = xhtml.replace("<p>This is the first edition of this ebook.<br/>", "<p>This is the <span class=\"revision-number\">{}</span> edition of this ebook.<br/>\n\t\t\tThis edition was released on<br/>\n\t\t\t<span class=\"revision-date\">{}</span><br/>".format(ordinal, friendly_timestamp))
+				else:
+					xhtml = regex.sub(r"<span class=\"revision-date\">.+?</span>", "<span class=\"revision-date\">{}</span>".format(friendly_timestamp), xhtml)
+					xhtml = regex.sub(r"<span class=\"revision-number\">[^<]+?</span>", "<span class=\"revision-number\">{}</span>".format(ordinal), xhtml)
+
+			file.seek(0)
+			file.write(xhtml)
+			file.truncate()
+
+	def update_flesch_reading_ease(self) -> None:
+		"""
+		Calculate a new reading ease for this ebook and update the metadata file.
+		Ignores SE boilerplate files like the imprint.
+
+		INPUTS
+		None
+
+		OUTPUTS
+		None.
+		"""
+		text = ""
+
+		for filename in se.get_target_filenames([self.directory], (".xhtml"), True):
+			with open(filename, "r", encoding="utf-8") as file:
+				text += " " + file.read()
+
+		with open(os.path.join(self.directory, "src", "epub", "content.opf"), "r+", encoding="utf-8") as file:
+			xhtml = file.read()
+			processed_xhtml = xhtml
+
+			processed_xhtml = regex.sub(r"<meta property=\"se:reading-ease\.flesch\">[^<]*</meta>", "<meta property=\"se:reading-ease.flesch\">{}</meta>".format(se.formatting.get_flesch_reading_ease(text)), processed_xhtml)
+
+			if processed_xhtml != xhtml:
+				file.seek(0)
+				file.write(processed_xhtml)
+				file.truncate()
+
+	def update_word_count(self) -> None:
+		"""
+		Calculate a new word count for this ebook and update the metadata file.
+		Ignores SE boilerplate files like the imprint, as well as any endnotes.
+
+		INPUTS
+		None
+
+		OUTPUTS
+		None.
+		"""
+		word_count = 0
+
+		for filename in se.get_target_filenames([self.directory], (".xhtml"), True):
+			if filename.endswith("endnotes.xhtml"):
+				continue
+
+			with open(filename, "r", encoding="utf-8") as file:
+				word_count += se.formatting.get_word_count(file.read())
+
+		with open(os.path.join(self.directory, "src", "epub", "content.opf"), "r+", encoding="utf-8") as file:
+			xhtml = file.read()
+			processed_xhtml = xhtml
+
+			processed_xhtml = regex.sub(r"<meta property=\"se:word-count\">[^<]*</meta>", "<meta property=\"se:word-count\">{}</meta>".format(word_count), processed_xhtml)
+
+			if processed_xhtml != xhtml:
+				file.seek(0)
+				file.write(processed_xhtml)
+				file.truncate()
 
 	def generate_manifest(self) -> str:
 		"""
