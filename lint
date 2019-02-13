@@ -19,7 +19,7 @@ def main() -> int:
 
 	for directory in args.directories:
 		try:
-			se_epub = SeEpub(directory, os.path.dirname(os.path.realpath(__file__)))
+			se_epub = SeEpub(directory)
 		except se.SeException as ex:
 			se.print_error(ex)
 			return ex.code

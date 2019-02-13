@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 from pkg_resources import resource_filename
 import regex
 import se
@@ -21,7 +22,7 @@ def modernize_hyphenation(xhtml: str) -> str:
 
 	# First, initialize our dictionary if we haven't already
 	if not se.spelling.DICTIONARY:
-		se.spelling.DICTIONARY = set(line.strip().lower() for line in open(resource_filename('se', 'data/words')))
+		se.spelling.DICTIONARY = set(line.strip().lower() for line in open(resource_filename("se", os.path.join("data", "words"))))
 
 	# Easy fix for a common case
 	xhtml = regex.sub(r"\b([Nn])ow-a-days\b", r"\1owadays", xhtml)	# now-a-days -> nowadays

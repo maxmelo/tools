@@ -15,7 +15,7 @@ def main() -> int:
 	args = parser.parse_args()
 
 	try:
-		se_epub = SeEpub(args.directory, os.path.dirname(os.path.realpath(__file__)))
+		se_epub = SeEpub(args.directory)
 	except se.SeException as ex:
 		se.print_error(ex)
 		return ex.code

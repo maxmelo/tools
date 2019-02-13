@@ -10,6 +10,7 @@ import unicodedata
 import io
 import regex
 import roman
+from pkg_resources import resource_filename
 import lxml.cssselect
 import lxml.etree as etree
 from bs4 import Tag, BeautifulSoup, NavigableString
@@ -44,7 +45,6 @@ class SeEpub:
 	"""
 
 	directory = ""
-	__tools_root_directory = ""
 	__metadata_xhtml = None
 	__metadata_tree = None
 	__generated_identifier = None
@@ -64,7 +64,7 @@ class SeEpub:
 
 		return self.__generated_github_repo_url
 
-	def __init__(self, epub_root_directory: str, tools_root_directory: str):
+	def __init__(self, epub_root_directory: str):
 		if not os.path.isdir(epub_root_directory):
 			raise se.InvalidSeEbookException("Not a directory: {}".format(epub_root_directory))
 
@@ -72,7 +72,6 @@ class SeEpub:
 			raise se.InvalidSeEbookException("Not a Standard Ebooks source directory: {}".format(epub_root_directory))
 
 		self.directory = os.path.abspath(epub_root_directory)
-		self.__tools_root_directory = os.path.abspath(tools_root_directory)
 
 		with open(os.path.join(self.directory, "src", "epub", "content.opf"), "r+", encoding="utf-8") as file:
 			self.__metadata_xhtml = file.read()
@@ -193,8 +192,7 @@ class SeEpub:
 
 		return unused_selectors
 
-	@staticmethod
-	def __new_bs4_tag(section: Tag, output_soup: BeautifulSoup) -> Tag:
+	def __new_bs4_tag(self, section: Tag, output_soup: BeautifulSoup) -> Tag:
 		"""
 		Helper function used in self.recompose()
 		Create a new BS4 tag given the current section.
@@ -228,7 +226,7 @@ class SeEpub:
 
 		# Quick sanity check before we begin
 		if "id" not in section.attrs or (section.parent.name.lower() != "body" and "id" not in section.parent.attrs):
-			raise se.SeException("Section without ID attribute")
+			raise se.InvalidXhtmlException("Section without ID attribute")
 
 		# Try to find our parent tag in the output, by ID.
 		# If it's not in the output, then append it to the tag's closest parent by ID (or <body>), then iterate over its children and do the same.
@@ -681,12 +679,11 @@ class SeEpub:
 		"""
 
 		messages = []
-
-		license_file_path = os.path.join(self.__tools_root_directory, "templates", "LICENSE.md")
-		gitignore_file_path = os.path.join(self.__tools_root_directory, "templates", "gitignore")
-		core_css_file_path = os.path.join(self.__tools_root_directory, "templates", "core.css")
-		logo_svg_file_path = os.path.join(self.__tools_root_directory, "templates", "logo.svg")
-		uncopyright_file_path = os.path.join(self.__tools_root_directory, "templates", "uncopyright.xhtml")
+		license_file_path = resource_filename("se", os.path.join("data", "templates", "LICENSE.md"))
+		gitignore_file_path = resource_filename("se", os.path.join("data", "templates", "gitignore"))
+		core_css_file_path = resource_filename("se", os.path.join("data", "templates", "core.css"))
+		logo_svg_file_path = resource_filename("se", os.path.join("data", "templates", "logo.svg"))
+		uncopyright_file_path = resource_filename("se", os.path.join("data", "templates", "uncopyright.xhtml"))
 		has_halftitle = False
 		has_frontmatter = False
 		has_cover_source = False

@@ -2,8 +2,6 @@
 
 import sys
 import argparse
-import os
-import fnmatch
 import se
 import se.formatting
 

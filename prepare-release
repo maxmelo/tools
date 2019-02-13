@@ -22,7 +22,7 @@ def main() -> int:
 			print("Processing {} ...".format(directory))
 
 		try:
-			se_epub = SeEpub(directory, os.path.dirname(os.path.realpath(__file__)))
+			se_epub = SeEpub(directory)
 
 			if args.word_count:
 				if args.verbose:
