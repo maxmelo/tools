@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import os
 import subprocess
@@ -9,7 +10,7 @@ import se
 import se.formatting
 
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Calculate work word count, insert release date if not yet set, and update modified date and revision number.")
 	parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
 	parser.add_argument("-w", "--no-word-count", dest="word_count", action="store_false", help="don’t calculate word count")
@@ -102,4 +103,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

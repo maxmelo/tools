@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import os
 import fnmatch
@@ -9,7 +10,7 @@ import smartypants
 import se
 
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Apply some scriptable typography rules from the Standard Ebooks typography manual to XHTML files.")
 	parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
 	parser.add_argument("-n", "--no-quotes", dest="quotes", action="store_false", help="don’t convert to smart quotes before doing other adjustments")
@@ -233,4 +234,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

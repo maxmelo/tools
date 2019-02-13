@@ -228,7 +228,7 @@ class SeEpub:
 
 		# Quick sanity check before we begin
 		if "id" not in section.attrs or (section.parent.name.lower() != "body" and "id" not in section.parent.attrs):
-			raise se.SeError("Section without ID attribute")
+			raise se.SeException("Section without ID attribute")
 
 		# Try to find our parent tag in the output, by ID.
 		# If it's not in the output, then append it to the tag's closest parent by ID (or <body>), then iterate over its children and do the same.
@@ -1304,7 +1304,7 @@ class SeEpub:
 						# Check for leftover asterisms
 						matches = regex.findall(r"\*\s*(\*\s*)+", file_contents)
 						if matches:
-							messages.append(LintMessage("Illegal asterism (***) detected. Section/scene breaks must be defined by an <hr/> tag.".format(matches), se.MESSAGE_TYPE_ERROR, filename))
+							messages.append(LintMessage("Illegal asterism (***) detected. Section/scene breaks must be defined by an <hr/> tag.", se.MESSAGE_TYPE_ERROR, filename))
 
 						# Check for space before endnote backlinks
 						if filename == "endnotes.xhtml":

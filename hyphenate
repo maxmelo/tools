@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import sys
 import os
@@ -10,7 +11,7 @@ from hyphen.dictools import list_installed
 from bs4 import BeautifulSoup
 
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Insert soft hyphens at syllable breaks in XHTML files.")
 	parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
 	parser.add_argument("-l", "--language", action="store", help="specify the language for the XHTML files; if unspecified, defaults to the \"xml:lang\" or \"lang\" attribute of the root <html> element")
@@ -143,4 +144,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

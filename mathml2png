@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import shutil
 import subprocess
@@ -8,7 +9,7 @@ import psutil
 import se
 
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Convert a fragment of MathML into a transparent PNG. Output is saved to the specified filename.")
 	parser.add_argument("-o", "--output-filename", dest="output_filename", metavar="FILENAME", required=True, type=str, help="the filename to save PNG output to")
 	parser.add_argument("mathml_fragment", metavar="FRAGMENT", help="a fragment of MathML; for example: <math><mn>2</mn></math>")
@@ -40,4 +41,4 @@ def main():
 			subprocess.call([convert_path, png_temp_file.name, "-fuzz", "10%", "-transparent", "white", "-trim", args.output_filename])
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

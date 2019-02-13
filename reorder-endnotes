@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import concurrent.futures
 import argparse
 import os
@@ -21,7 +22,7 @@ def is_positive_integer(value: str) -> int:
 
 	return int_value
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Increment the specified endnote and all following endnotes by 1.")
 	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument("--increment", "-i", action="store_true", help="increment the target endnote number and all following endnotes")
@@ -106,4 +107,4 @@ def process_endnotes_in_file(filename: str, root: str, note_range: range, step: 
 			file.truncate()
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

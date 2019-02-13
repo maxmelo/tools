@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import os
 import fnmatch
@@ -7,10 +8,11 @@ import subprocess
 import tempfile
 import shutil
 import git
+import psutil
 import se
 
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Use Firefox to render and compare XHTML files in an ebook repository. Run on a dirty repository to visually compare the repository’s dirty state with its clean state. If a file renders differently, copy screenshots of the new, original, and diff (if available) renderings into the current working directory. Diff renderings may not be available if the two renderings differ in dimensions. WARNING: DO NOT START FIREFOX WHILE THIS PROGRAM IS RUNNING!")
 	parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
 	parser.add_argument("-n", "--no-images", dest="copy_images", action="store_false", help="don’t copy diff images to the current working directory in case of difference")
@@ -31,14 +33,8 @@ def main():
 		exit(1)
 
 	# Firefox won't start in headless mode if there is another Firefox process running; check that here.
-	is_firefox_running = True
-	try:
-		subprocess.check_output(["pidof", "firefox"])
-	except Exception:
-		is_firefox_running = False
-
-	if is_firefox_running:
-		se.print_error("Firefox is currently running. It must be closed in order to run headless.")
+	if "firefox" in (p.name() for p in psutil.process_iter()):
+		se.print_error("firefox is required to process MathML, but firefox is currently running. Close all instances of firefox and try again.")
 		exit(1)
 
 	for target in args.targets:
@@ -97,4 +93,4 @@ def main():
 							pass
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

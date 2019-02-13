@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import os
 import se
 from se.se_epub import SeEpub
 
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Print <manifest> and <spine> tags to standard output for the given Standard Ebooks source directory, for use in that directory’s content.opf.")
 	parser.add_argument("-m", "--manifest", action="store_false", help="only print the manifest")
 	parser.add_argument("-s", "--spine", action="store_false", help="only print the spine")
@@ -27,4 +28,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

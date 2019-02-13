@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import os
+from termcolor import colored
 import se
 from se.se_epub import SeEpub
-from termcolor import colored
 
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Check for various Standard Ebooks style errors.")
 	parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
 	parser.add_argument("-p", "--plain", action="store_true", help="print plain output")
@@ -78,4 +79,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

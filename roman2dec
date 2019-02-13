@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import sys
 import roman
 import se
 
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Convert a Roman numeral to a decimal number.")
 	parser.add_argument("-n", "--no-newline", dest="newline", action="store_false", help="don’t end output with a newline")
 	parser.add_argument("numbers", metavar="NUMERAL", nargs="+", help="a Roman numeral")
@@ -34,4 +35,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

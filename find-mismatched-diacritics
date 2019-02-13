@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import os
 import fnmatch
@@ -7,7 +8,7 @@ import unicodedata
 import regex
 
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Find words with mismatched diacritics in XHTML files.  For example, `cafe` in one file and `café` in another.")
 	parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
 	parser.add_argument("targets", metavar="TARGET", nargs="+", help="an XHTML file, or a directory containing XHTML files")
@@ -71,4 +72,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

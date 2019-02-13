@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import sys
 import unicodedata
 
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Display Unicode code points, descriptions, and links to more details for each character in a string.  Useful for differentiating between different flavors of spaces, dashes, and invisible characters like word joiners.")
 	parser.add_argument("strings", metavar="STRING", nargs="*", help="a Unicode string")
 	args = parser.parse_args()
@@ -25,4 +26,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

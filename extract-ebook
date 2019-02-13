@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import os
 import sys
@@ -10,7 +11,7 @@ from se.kindleunpack import kindleunpack # GPLv3: https://www.mobileread.com/for
 import se
 
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Extract an epub, mobi, or azw3 ebook into ./FILENAME.extracted/ or a target directory.")
 	parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
 	parser.add_argument("-d", "--destination", type=str, help="a target directory to extract into")
@@ -58,4 +59,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

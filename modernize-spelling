@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import os
 import fnmatch
@@ -230,7 +231,7 @@ def modernize_spelling(xhtml: str, language: str) -> str:
 
 	return xhtml
 
-def main():
+def main() -> int:
 	parser = argparse.ArgumentParser(description="Modernize spelling of some archaic words, and replace words that may be archaically compounded with a dash to a more modern spelling.  For example, replace `ash-tray` with `ashtray`.")
 	parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
 	parser.add_argument("-n", "--no-hyphens", dest="modernize_hyphenation", action="store_false", help="don’t modernize hyphenation")
@@ -288,4 +289,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())
