@@ -6,10 +6,113 @@ import html
 import os
 import subprocess
 import regex
+from hyphen import Hyphenator
+from hyphen.dictools import list_installed
+from bs4 import BeautifulSoup
 from titlecase import titlecase as pip_titlecase
 import se
 
-def replace_inessential_character_references(match_object):
+def hyphenate(xhtml: str, language: str, ignore_h_tags: bool = False) -> str:
+	"""
+	Add soft hyphens to a string of XHTML.
+
+	INPUTS
+	xhtml: A string of XHTML
+	language: An ISO language code, like en-US, or None to auto-detect based on XHTML input
+	ignore_h_tags: True to not hyphenate within <h1-6> tags
+
+	OUTPUTS
+	A string of XHTML with soft hyphens inserted in words. The output is not guaranteed to be pretty-printed.
+	"""
+	hyphenators = {}
+	soup = BeautifulSoup(xhtml, "lxml")
+
+	if language is None:
+		try:
+			language = soup.html["xml:lang"]
+		except Exception:
+			try:
+				language = soup.html["lang"]
+			except Exception:
+				raise se.InvalidLanguageException("No `xml:lang` or `lang` attribute on root <html> element; couldn’t guess file language.")
+
+	try:
+		language = language.replace("-", "_")
+		if language not in hyphenators:
+			hyphenators[language] = Hyphenator(language)
+	except Exception:
+		raise se.InvalidLanguageException("Hyphenator for language \"{}\" not available.\nInstalled hyphenators: {}".format(language, list_installed()))
+
+	text = str(soup.body)
+	result = text
+	word = ""
+	in_tag = False
+	tag_name = ""
+	reading_tag_name = False
+	in_h_tag = False
+	pos = 1
+	h_opening_tag_pattern = regex.compile("^h[1-6]$")
+	h_closing_tag_pattern = regex.compile("^/h[1-6]$")
+
+	# The general idea here is to read the whole contents of the <body> tag character by character.
+	# If we hit a <, we ignore the contents until we hit the next >.
+	# Otherwise, we consider a word to be an unbroken sequence of alphanumeric characters.
+	# We can't just split at whitespace because HTML tags can contain whitespace (attributes for example)
+	for char in text:
+		process = False
+
+		if char == "<":
+			process = True
+			in_tag = True
+			reading_tag_name = True
+			tag_name = ""
+		elif in_tag and char == ">":
+			in_tag = False
+			reading_tag_name = False
+			word = ""
+		elif in_tag and char == " ":
+			reading_tag_name = False
+		elif in_tag and reading_tag_name:
+			tag_name = tag_name + char
+		elif not in_tag and char.isalnum():
+			word = word + char
+		elif not in_tag:
+			process = True
+
+		# Do we ignore <h1-6> tags?
+		if not reading_tag_name and h_opening_tag_pattern.match(tag_name):
+			in_h_tag = True
+
+		if not reading_tag_name and h_closing_tag_pattern.match(tag_name):
+			in_h_tag = False
+
+		if ignore_h_tags and in_h_tag:
+			process = False
+
+		if process:
+			if word != "":
+				new_word = word
+
+				# 100 is the hard coded max word length in the hyphenator module
+				# Check here to avoid an error
+				if len(word) < 100:
+					syllables = hyphenators[language].syllables(word)
+
+					if syllables:
+						new_word = "\u00AD".join(syllables)
+
+				result = result[:pos - len(word) - 1] + new_word + char + result[pos:]
+				pos = pos + len(new_word) - len(word)
+			word = ""
+
+		pos = pos + 1
+
+	xhtml = regex.sub(r"<body.+<\/body>", "", xhtml, flags=regex.DOTALL)
+	xhtml = xhtml.replace("</head>", "</head>\n\t" + result)
+
+	return xhtml
+
+def replace_character_references(match_object) -> str:
 	"""Replace most XML character references with literal characters.
 
 	This function excludes &, >, and < (&amp;, &lt;, and &gt;), since
@@ -49,7 +152,7 @@ def format_xhtml(xhtml: str, xmllint_path: str, single_lines: bool = False, is_m
 	# Epub3 doesn't allow named entities, so convert them to their unicode equivalents
 	# But, don't unescape the content.opf long-description accidentally
 	if not is_metadata_file:
-		xhtml = regex.sub(r"&#?\w+;", replace_inessential_character_references, xhtml)
+		xhtml = regex.sub(r"&#?\w+;", replace_character_references, xhtml)
 
 	# Remove unnecessary doctypes which can cause xmllint to hang
 	xhtml = regex.sub(r"<!DOCTYPE[^>]+?>", "", xhtml, flags=regex.DOTALL)

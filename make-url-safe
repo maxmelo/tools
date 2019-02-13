@@ -27,6 +27,7 @@ def main() -> int:
 		else:
 			print(se.formatting.make_url_safe(line), end="")
 
+	return 0
 
 if __name__ == "__main__":
 	sys.exit(main())

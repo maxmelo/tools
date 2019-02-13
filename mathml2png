@@ -21,15 +21,15 @@ def main() -> int:
 
 	if firefox_path is None:
 		se.print_error("Couldn’t locate firefox. Is it installed?")
-		exit(1)
+		return se.MissingDependencyException.code
 
 	if convert_path is None:
 		se.print_error("Couldn’t locate imagemagick. Is it installed?")
-		exit(1)
+		return se.MissingDependencyException.code
 
 	if "firefox" in (p.name() for p in psutil.process_iter()):
 		se.print_error("firefox is required to process MathML, but firefox is currently running. Close all instances of firefox and try again.")
-		exit(1)
+		return se.FirefoxRunningException.code
 
 	with tempfile.NamedTemporaryFile(mode="w+") as mathml_temp_file:
 		with tempfile.NamedTemporaryFile(mode="w+", suffix=".png") as png_temp_file:
@@ -39,6 +39,8 @@ def main() -> int:
 			subprocess.call([firefox_path, "-screenshot", png_temp_file.name, "file://{}".format(mathml_temp_file.name)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 			subprocess.call([convert_path, png_temp_file.name, "-fuzz", "10%", "-transparent", "white", "-trim", args.output_filename])
+
+	return 0
 
 if __name__ == "__main__":
 	sys.exit(main())

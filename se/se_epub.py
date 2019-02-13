@@ -66,10 +66,10 @@ class SeEpub:
 
 	def __init__(self, epub_root_directory: str, tools_root_directory: str):
 		if not os.path.isdir(epub_root_directory):
-			raise NotADirectoryError("Not a directory: {}".format(epub_root_directory))
+			raise se.InvalidSeEbookException("Not a directory: {}".format(epub_root_directory))
 
 		if not os.path.isfile(os.path.join(epub_root_directory, "src", "epub", "content.opf")):
-			raise NotADirectoryError("Not a Standard Ebooks source directory: {}".format(epub_root_directory))
+			raise se.InvalidSeEbookException("Not a Standard Ebooks source directory: {}".format(epub_root_directory))
 
 		self.directory = os.path.abspath(epub_root_directory)
 		self.__tools_root_directory = os.path.abspath(tools_root_directory)

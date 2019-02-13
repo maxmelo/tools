@@ -72,6 +72,24 @@ class InvalidEncodingException(SeException):
 class MissingDependencyException(SeException):
 	code = 3
 
+class InvalidInputException(SeException):
+	code = 4
+
+class FileExistsException(SeException):
+	code = 5
+
+class InvalidFileException(SeException):
+	code = 6
+
+class InvalidLanguageException(SeException):
+	code = 7
+
+class InvalidSeEbookException(SeException):
+	code = 8
+
+class FirefoxRunningException(SeException):
+	code = 9
+
 def natural_sort(list_to_sort: list) -> list:
 	"""
 	Natural sort a list.
