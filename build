@@ -13,6 +13,7 @@ import subprocess
 import fnmatch
 from copy import deepcopy
 import regex
+from pkg_resources import resource_filename
 import lxml.cssselect
 import lxml.etree as etree
 from bs4 import BeautifulSoup
@@ -190,7 +191,6 @@ def main() -> int:
 	parser.add_argument("source_directory", metavar="DIRECTORY", help="a Standard Ebooks source directory")
 	args = parser.parse_args()
 
-	script_directory = os.path.dirname(os.path.realpath(__file__))
 	calibre_app_mac_path = "/Applications/calibre.app/Contents/MacOS/"
 	epubcheck_path = shutil.which("epubcheck")
 	ebook_convert_path = shutil.which("ebook-convert")
@@ -199,8 +199,8 @@ def main() -> int:
 		ebook_convert_path = os.path.join(calibre_app_mac_path, "ebook-convert")
 	rsvg_convert_path = shutil.which("rsvg-convert")
 	convert_path = shutil.which("convert")
-	toc2ncx_xsl_filename = os.path.join(script_directory, "data", "navdoc2ncx.xsl")
-	mathml_xsl_filename = os.path.join(script_directory, "data", "mathmlcontent2presentation.xsl")
+	toc2ncx_xsl_filename = resource_filename("se", os.path.join("data", "navdoc2ncx.xsl"))
+	mathml_xsl_filename = resource_filename("se", os.path.join("data", "mathmlcontent2presentation.xsl"))
 
 	# Check for some required tools
 	if args.check and epubcheck_path is None:
@@ -295,7 +295,7 @@ def main() -> int:
 		# Are we including proofreading CSS?
 		if args.proof:
 			with open(os.path.join(work_epub_root_directory, "epub", "css", "local.css"), "a", encoding="utf-8") as local_css_file:
-				with open(os.path.join(script_directory, "templates", "proofreading.css"), "r", encoding="utf-8") as proofreading_css_file:
+				with open(resource_filename("se", os.path.join("data", "templates", "proofreading.css")), "r", encoding="utf-8") as proofreading_css_file:
 					local_css_file.write(proofreading_css_file.read())
 
 		# Output the pure epub3 file
@@ -318,7 +318,7 @@ def main() -> int:
 
 		# Include compatibility CSS
 		with open(os.path.join(work_epub_root_directory, "epub", "css", "core.css"), "a", encoding="utf-8") as core_css_file:
-			with open(os.path.join(script_directory, "templates", "compatibility.css"), "r", encoding="utf-8") as compatibility_css_file:
+			with open(resource_filename("se", os.path.join("data", "templates", "compatibility.css")), "r", encoding="utf-8") as compatibility_css_file:
 				core_css_file.write(compatibility_css_file.read())
 
 		# Simplify CSS and tags
@@ -1023,7 +1023,7 @@ def main() -> int:
 
 			# Include compatibility CSS
 			with open(os.path.join(work_epub_root_directory, "epub", "css", "core.css"), "a", encoding="utf-8") as core_css_file:
-				with open(os.path.join(script_directory, "templates", "kindle.css"), "r", encoding="utf-8") as compatibility_css_file:
+				with open(resource_filename("se", os.path.join("data", "templates", "kindle.css")), "r", encoding="utf-8") as compatibility_css_file:
 					core_css_file.write(compatibility_css_file.read())
 
 			# Add soft hyphens

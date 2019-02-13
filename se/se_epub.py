@@ -445,23 +445,21 @@ class SeEpub:
 		friendly_timestamp = "{0:%B %e, %Y, %l:%M <abbr class=\"time eoc\">%p</abbr>}".format(timestamp)
 		friendly_timestamp = regex.sub(r"\s+", " ", friendly_timestamp).replace("AM", "a.m.").replace("PM", "p.m.").replace(" <abbr", " <abbr")
 
-		with open(os.path.join(self.directory, "src", "epub", "content.opf"), "r+", encoding="utf-8") as file:
-			xhtml = file.read()
+		# Calculate the new revision number
+		revision = int(regex.search(r"<meta property=\"se:revision-number\">([0-9]+)</meta>", self.__metadata_xhtml).group(1))
+		revision = revision + 1
 
-			# Calculate the new revision number
-			revision = int(regex.search(r"<meta property=\"se:revision-number\">([0-9]+)</meta>", xhtml).group(1))
-			revision = revision + 1
+		# If this is an initial release, set the release date in content.opf
+		if revision == 1:
+			self.__metadata_xhtml = regex.sub(r"<dc:date>[^<]+?</dc:date>", "<dc:date>{}</dc:date>".format(iso_timestamp), self.__metadata_xhtml)
 
-			# If this is an initial release, set the release date in content.opf
-			if revision == 1:
-				xhtml = regex.sub(r"<dc:date>[^<]+?</dc:date>", "<dc:date>{}</dc:date>".format(iso_timestamp), xhtml)
+		# Set modified date and revision number in content.opf
+		self.__metadata_xhtml = regex.sub(r"<meta property=\"dcterms:modified\">[^<]+?</meta>", "<meta property=\"dcterms:modified\">{}</meta>".format(iso_timestamp), self.__metadata_xhtml)
+		self.__metadata_xhtml = regex.sub(r"<meta property=\"se:revision-number\">[^<]+?</meta>", "<meta property=\"se:revision-number\">{}</meta>".format(revision), self.__metadata_xhtml)
 
-			# Set modified date and revision number in content.opf
-			xhtml = regex.sub(r"<meta property=\"dcterms:modified\">[^<]+?</meta>", "<meta property=\"dcterms:modified\">{}</meta>".format(iso_timestamp), xhtml)
-			xhtml = regex.sub(r"<meta property=\"se:revision-number\">[^<]+?</meta>", "<meta property=\"se:revision-number\">{}</meta>".format(revision), xhtml)
-
+		with open(os.path.join(self.directory, "src", "epub", "content.opf"), "w", encoding="utf-8") as file:
 			file.seek(0)
-			file.write(xhtml)
+			file.write(self.__metadata_xhtml)
 			file.truncate()
 
 		# Update the colophon with release info
@@ -501,16 +499,12 @@ class SeEpub:
 			with open(filename, "r", encoding="utf-8") as file:
 				text += " " + file.read()
 
-		with open(os.path.join(self.directory, "src", "epub", "content.opf"), "r+", encoding="utf-8") as file:
-			xhtml = file.read()
-			processed_xhtml = xhtml
+		self.__metadata_xhtml = regex.sub(r"<meta property=\"se:reading-ease\.flesch\">[^<]*</meta>", "<meta property=\"se:reading-ease.flesch\">{}</meta>".format(se.formatting.get_flesch_reading_ease(text)), self.__metadata_xhtml)
 
-			processed_xhtml = regex.sub(r"<meta property=\"se:reading-ease\.flesch\">[^<]*</meta>", "<meta property=\"se:reading-ease.flesch\">{}</meta>".format(se.formatting.get_flesch_reading_ease(text)), processed_xhtml)
-
-			if processed_xhtml != xhtml:
-				file.seek(0)
-				file.write(processed_xhtml)
-				file.truncate()
+		with open(os.path.join(self.directory, "src", "epub", "content.opf"), "w", encoding="utf-8") as file:
+			file.seek(0)
+			file.write(self.__metadata_xhtml)
+			file.truncate()
 
 	def update_word_count(self) -> None:
 		"""
@@ -532,16 +526,12 @@ class SeEpub:
 			with open(filename, "r", encoding="utf-8") as file:
 				word_count += se.formatting.get_word_count(file.read())
 
+		self.__metadata_xhtml = regex.sub(r"<meta property=\"se:word-count\">[^<]*</meta>", "<meta property=\"se:word-count\">{}</meta>".format(word_count), self.__metadata_xhtml)
+
 		with open(os.path.join(self.directory, "src", "epub", "content.opf"), "r+", encoding="utf-8") as file:
-			xhtml = file.read()
-			processed_xhtml = xhtml
-
-			processed_xhtml = regex.sub(r"<meta property=\"se:word-count\">[^<]*</meta>", "<meta property=\"se:word-count\">{}</meta>".format(word_count), processed_xhtml)
-
-			if processed_xhtml != xhtml:
-				file.seek(0)
-				file.write(processed_xhtml)
-				file.truncate()
+			file.seek(0)
+			file.write(self.__metadata_xhtml)
+			file.truncate()
 
 	def generate_manifest(self) -> str:
 		"""

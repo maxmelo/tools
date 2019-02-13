@@ -10,6 +10,7 @@ from typing import Union
 import requests
 import git
 import regex
+from pkg_resources import resource_filename
 from ftfy import fix_text
 from bs4 import BeautifulSoup
 import se
@@ -452,23 +453,23 @@ def main() -> int:
 			file.write(str(soup))
 
 	# Copy over templates
-	shutil.copy(os.path.normpath(templates_path + "/gitignore"), os.path.normpath(repo_name + "/.gitignore"))
-	shutil.copy(os.path.normpath(templates_path + "/LICENSE.md"), os.path.normpath(repo_name + "/"))
-	shutil.copy(os.path.normpath(templates_path + "/META-INF/container.xml"), os.path.normpath(repo_name + "/src/META-INF/"))
-	shutil.copy(os.path.normpath(templates_path + "/mimetype"), os.path.normpath(repo_name + "/src/"))
-	shutil.copy(os.path.normpath(templates_path + "/content.opf"), os.path.normpath(repo_name + "/src/epub/"))
-	shutil.copy(os.path.normpath(templates_path + "/onix.xml"), os.path.normpath(repo_name + "/src/epub/"))
-	shutil.copy(os.path.normpath(templates_path + "/toc.xhtml"), os.path.normpath(repo_name + "/src/epub/"))
-	shutil.copy(os.path.normpath(templates_path + "/core.css"), os.path.normpath(repo_name + "/src/epub/css/"))
-	shutil.copy(os.path.normpath(templates_path + "/local.css"), os.path.normpath(repo_name + "/src/epub/css/"))
-	shutil.copy(os.path.normpath(templates_path + "/logo.svg"), os.path.normpath(repo_name + "/src/epub/images/"))
-	shutil.copy(os.path.normpath(templates_path + "/colophon.xhtml"), os.path.normpath(repo_name + "/src/epub/text/"))
-	shutil.copy(os.path.normpath(templates_path + "/imprint.xhtml"), os.path.normpath(repo_name + "/src/epub/text/"))
-	shutil.copy(os.path.normpath(templates_path + "/titlepage.xhtml"), os.path.normpath(repo_name + "/src/epub/text/"))
-	shutil.copy(os.path.normpath(templates_path + "/uncopyright.xhtml"), os.path.normpath(repo_name + "/src/epub/text/"))
-	shutil.copy(os.path.normpath(templates_path + "/titlepage.svg"), os.path.normpath(repo_name + "/images/"))
-	shutil.copy(os.path.normpath(templates_path + "/cover.jpg"), os.path.normpath(repo_name + "/images/cover.jpg"))
-	shutil.copy(os.path.normpath(templates_path + "/cover.svg"), os.path.normpath(repo_name + "/images/cover.svg"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "gitignore")), os.path.normpath(repo_name + "/.gitignore"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "LICENSE.md")), os.path.normpath(repo_name + "/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "META-INF", "container.xml")), os.path.normpath(repo_name + "/src/META-INF/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "mimetype")), os.path.normpath(repo_name + "/src/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "content.opf")), os.path.normpath(repo_name + "/src/epub/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "onix.xml")), os.path.normpath(repo_name + "/src/epub/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "toc.xhtml")), os.path.normpath(repo_name + "/src/epub/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "core.css")), os.path.normpath(repo_name + "/src/epub/css/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "local.css")), os.path.normpath(repo_name + "/src/epub/css/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "logo.svg")), os.path.normpath(repo_name + "/src/epub/images/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "colophon.xhtml")), os.path.normpath(repo_name + "/src/epub/text/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "imprint.xhtml")), os.path.normpath(repo_name + "/src/epub/text/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "titlepage.xhtml")), os.path.normpath(repo_name + "/src/epub/text/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "uncopyright.xhtml")), os.path.normpath(repo_name + "/src/epub/text/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "titlepage.svg")), os.path.normpath(repo_name + "/images/"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "cover.jpg")), os.path.normpath(repo_name + "/images/cover.jpg"))
+	shutil.copy(resource_filename("se", os.path.join("data", "templates", "cover.svg")), os.path.normpath(repo_name + "/images/cover.svg"))
 
 	# Try to find Wikipedia links if possible
 	author_wiki_url, author_nacoaf_url = get_wikipedia_url(args.author, True)
