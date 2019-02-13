@@ -6,7 +6,12 @@ import glob
 import html
 import tempfile
 import datetime
+import errno
+import shutil
+import fnmatch
+import base64
 import unicodedata
+import subprocess
 import io
 import regex
 import roman
@@ -17,6 +22,7 @@ from bs4 import Tag, BeautifulSoup, NavigableString
 import se
 import se.formatting
 import se.easy_xml
+import se.images
 
 
 class LintMessage:
@@ -426,6 +432,88 @@ class SeEpub:
 		os.remove(file_name_xhtml)
 
 		return xhtml
+
+	def generate_titlepage_svg(self) -> None:
+		inkscape_path = shutil.which("inkscape")
+
+		if inkscape_path is None:
+			raise se.MissingDependencyException("Couldn’t locate Inkscape. Is it installed?")
+
+		source_images_directory = os.path.join(self.directory, "images")
+		source_titlepage_svg_filename = os.path.join(source_images_directory, "titlepage.svg")
+		dest_images_directory = os.path.join(self.directory, "src", "epub", "images")
+		dest_titlepage_svg_filename = os.path.join(dest_images_directory, "titlepage.svg")
+
+		if os.path.isfile(source_titlepage_svg_filename):
+			# Convert text to paths
+			# inkscape adds a ton of crap to the SVG and we clean that crap a little later
+			subprocess.run([inkscape_path, source_titlepage_svg_filename, "--without-gui", "--export-text-to-path", "--export-plain-svg", dest_titlepage_svg_filename])
+
+			se.images.format_inkscape_svg(dest_titlepage_svg_filename)
+
+			# For the titlepage we want to remove all styles, since they are not used anymore
+			with open(dest_titlepage_svg_filename, "r+", encoding="utf-8") as file:
+				svg = regex.sub(r"<style.+?</style>[\n\t]+", "", file.read(), flags=regex.DOTALL)
+
+				file.seek(0)
+				file.write(svg)
+				file.truncate()
+
+	def generate_cover_svg(self) -> None:
+		inkscape_path = shutil.which("inkscape")
+
+		if inkscape_path is None:
+			raise se.MissingDependencyException("Couldn’t locate Inkscape. Is it installed?")
+
+		source_images_directory = os.path.join(self.directory, "images")
+		source_cover_jpg_filename = os.path.join(source_images_directory, "cover.jpg")
+		source_cover_svg_filename = os.path.join(source_images_directory, "cover.svg")
+		dest_images_directory = os.path.join(self.directory, "src", "epub", "images")
+		dest_cover_svg_filename = os.path.join(dest_images_directory, "cover.svg")
+
+		# Create output directory if it doesn't exist
+		try:
+			os.makedirs(dest_images_directory)
+		except OSError as ex:
+			if ex.errno != errno.EEXIST:
+				raise ex
+
+		# Remove useless metadata from cover source files
+		for root, _, filenames in os.walk(source_images_directory):
+			for filename in fnmatch.filter(filenames, "cover.source.*"):
+				se.images.remove_image_metadata(os.path.join(root, filename))
+
+		if os.path.isfile(source_cover_jpg_filename):
+			se.images.remove_image_metadata(source_cover_jpg_filename)
+
+			if os.path.isfile(source_cover_svg_filename):
+				# base64 encode cover.jpg
+				with open(source_cover_jpg_filename, "rb") as file:
+					source_cover_jpg_base64 = base64.b64encode(file.read()).decode()
+
+				# Convert text to paths
+				# Inkscape adds a ton of crap to the SVG and we clean that crap a little later
+				subprocess.run([inkscape_path, source_cover_svg_filename, "--without-gui", "--export-text-to-path", "--export-plain-svg", dest_cover_svg_filename])
+
+				# Embed cover.jpg
+				with open(dest_cover_svg_filename, "r+", encoding="utf-8") as file:
+					svg = regex.sub(r"xlink:href=\".*?cover\.jpg", "xlink:href=\"data:image/jpeg;base64," + source_cover_jpg_base64, file.read(), flags=regex.DOTALL)
+
+					file.seek(0)
+					file.write(svg)
+					file.truncate()
+
+				se.images.format_inkscape_svg(dest_cover_svg_filename)
+
+				# For the cover we want to keep the path.title-box style, and add an additional
+				# style to color our new paths white
+				with open(dest_cover_svg_filename, "r+", encoding="utf-8") as file:
+					svg = regex.sub(r"<style.+?</style>", "<style type=\"text/css\">\n\t\tpath{\n\t\t\tfill: #fff;\n\t\t}\n\n\t\t.title-box{\n\t\t\tfill: #000;\n\t\t\tfill-opacity: .75;\n\t\t}\n\t</style>", file.read(), flags=regex.DOTALL)
+
+					file.seek(0)
+					file.write(svg)
+					file.truncate()
+
 
 	def update_revision(self) -> None:
 		"""

@@ -85,7 +85,7 @@ def calculate_image_lines(string: str, target_height: int, canvas_width: int) ->
 
 	return lines
 
-def generate_titlepage_svg(title: str, authors: Union[str, list], contributors: dict, title_string: str, templates_path: str) -> str:
+def generate_titlepage_svg(title: str, authors: Union[str, list], contributors: dict, title_string: str) -> str:
 	"""
 	Generate a draft of the titlepage SVG.
 	The function tries to build the title with the widest line at the bottom, moving up.
@@ -96,7 +96,6 @@ def generate_titlepage_svg(title: str, authors: Union[str, list], contributors: 
 	authors: an author, or an array of authors
 	contributors: a dict in the form of: {"contributor descriptor": "contributor name(s)" ... }
 	title_string: The SE titlestring (e.g. "The Rubáiyát of Omar Khayyám. Translated by Edward Fitzgerald. Illustrated by Edmund Dulac")
-	templates_path: The full path to the SE templates folder
 
 	OUTPUTS
 	A string representing the complete SVG source code of the titlepage.
@@ -109,7 +108,7 @@ def generate_titlepage_svg(title: str, authors: Union[str, list], contributors: 
 		authors = [authors]
 
 	# Read our template SVG to get some values before we begin
-	with open(os.path.join(templates_path, "titlepage.svg"), "r", encoding="utf-8") as file:
+	with open(resource_filename("se", os.path.join("data", "templates", "titlepage.svg")), "r", encoding="utf-8") as file:
 		svg = file.read()
 
 	# Remove the template text elements from the SVG source, we'll write out to it later
@@ -181,7 +180,7 @@ def generate_titlepage_svg(title: str, authors: Union[str, list], contributors: 
 
 	return svg
 
-def generate_cover_svg(title: str, authors: Union[str, list], title_string: str, templates_path: str) -> str:
+def generate_cover_svg(title: str, authors: Union[str, list], title_string: str) -> str:
 	"""
 	Generate a draft of the cover SVG.
 	The function tries to build the title box with the widest line at the bottom, moving up.
@@ -191,7 +190,6 @@ def generate_cover_svg(title: str, authors: Union[str, list], title_string: str,
 	title: The title
 	authors: an author, or an array of authors
 	title_string: The SE titlestring (e.g. "The Rubáiyát of Omar Khayyám. Translated by Edward Fitzgerald. Illustrated by Edmund Dulac")
-	templates_path: The full path to the SE templates folder
 
 	OUTPUTS
 	A string representing the complete SVG source code of the cover page.
@@ -208,7 +206,7 @@ def generate_cover_svg(title: str, authors: Union[str, list], title_string: str,
 		authors = [authors]
 
 	# Read our template SVG to get some values before we begin
-	with open(os.path.join(templates_path, "cover.svg"), "r", encoding="utf-8") as file:
+	with open(resource_filename("se", os.path.join("data", "templates", "cover.svg")), "r", encoding="utf-8") as file:
 		svg = file.read()
 
 	# Remove the template text elements from the SVG source, we'll write out to it later
@@ -338,7 +336,6 @@ def main() -> int:
 		exit(1)
 
 	# Put together some variables for later use
-	templates_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "templates")
 	identifier = se.formatting.make_url_safe(args.author) + "/" + se.formatting.make_url_safe(args.title)
 	title_string = args.title.replace("'", "’") + ", by " + args.author.replace("'", "’")
 	sorted_title = regex.sub(r"^(A|An|The) (.+)$", "\\2, \\1", args.title)
@@ -492,11 +489,11 @@ def main() -> int:
 		contributors["illustrated by"] = args.illustrator
 
 	with open(os.path.join(repo_name, "images", "titlepage.svg"), "w") as file:
-		file.write(generate_titlepage_svg(args.title, args.author, contributors, title_string, templates_path))
+		file.write(generate_titlepage_svg(args.title, args.author, contributors, title_string))
 
 	# Create the cover SVG
 	with open(os.path.join(repo_name, "images", "cover.svg"), "w") as file:
-		file.write(generate_cover_svg(args.title, args.author, title_string, templates_path))
+		file.write(generate_cover_svg(args.title, args.author, title_string))
 
 	if args.pg_url:
 		se.replace_in_file(os.path.normpath(repo_name + "/src/epub/text/imprint.xhtml"), "PGLINK", args.pg_url)
