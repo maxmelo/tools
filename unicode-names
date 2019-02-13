@@ -2,7 +2,6 @@
 
 import sys
 import argparse
-import sys
 import unicodedata
 
 
@@ -23,6 +22,8 @@ def main() -> int:
 	for line in lines:
 		for character in line:
 			print(character + "\tU+{:04X}".format(ord(character)) + "\t" + unicodedata.name(character) + "\t" + "http://unicode.org/cldr/utility/character.jsp?a={:04X}".format(ord(character)))
+
+	return 0
 
 
 if __name__ == "__main__":

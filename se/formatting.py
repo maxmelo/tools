@@ -6,6 +6,7 @@ import html
 import os
 import subprocess
 import shutil
+import string
 import tempfile
 import regex
 import psutil
@@ -13,7 +14,173 @@ from titlecase import titlecase as pip_titlecase
 import se
 
 
-def word_count(xhtml: str) -> int:
+def get_flesch_reading_ease(xhtml: str) -> float:
+	"""
+	Get the Flesch reading ease of some XHTML.
+
+	INPUTS
+	text: A string of XHTML to calculate the reading ease of.
+
+	OUTPUTS
+	A float representing the Flesch reading ease of the text.
+	"""
+
+	# Remove HTML tags
+	text = regex.sub(r"<title>.+?</title>", " ", xhtml)
+	text = regex.sub(r"<.+?>", " ", text, flags=regex.DOTALL)
+
+	# Remove non-sentence-ending punctuation from source text
+	included_characters = list(string.whitespace) + list(string.digits) + [":", ";", ".", "?", "!"]
+	processed_text = regex.sub(r"[—–\n]", " ", text.lower())
+	processed_text = "".join(c for c in processed_text if c.isalpha() or c in included_characters).strip()
+
+	# Remove accents
+	processed_text = "".join(c for c in unicodedata.normalize("NFD", processed_text) if unicodedata.category(c) != "Mn")
+
+	# Get word count
+	word_count = se.formatting.get_word_count(processed_text)
+	if word_count <= 0:
+		word_count = 1
+
+	# Get average sentence length
+	ignore_count = 0
+	sentences = regex.split(r" *[\.\?!]['\"\)\]]* *", processed_text)
+	for sentence in sentences:
+		if se.formatting.get_word_count(sentence) <= 2:
+			ignore_count = ignore_count + 1
+	sentence_count = len(sentences) - ignore_count
+
+	if sentence_count <= 0:
+		sentence_count = 1
+
+	average_sentence_length = round(float(word_count) / float(sentence_count), 1)
+
+	# Get average syllables per word
+	syllable_count = 0
+	for word in processed_text.split():
+		syllable_count += __get_syllable_count(word)
+
+	average_syllables_per_word = round(float(syllable_count) / float(word_count), 1)
+
+	return round(206.835 - float(1.015 * average_sentence_length) - float(84.6 * average_syllables_per_word), 2)
+
+def __get_syllable_count(word: str) -> int:
+	"""
+	Helper function to get the syllable count of a word.
+	"""
+
+	# See http://eayd.in/?p=232
+	exception_add = ["serious", "crucial"]
+	exception_del = ["fortunately", "unfortunately"]
+
+	co_one = ["cool", "coach", "coat", "coal", "count", "coin", "coarse", "coup", "coif", "cook", "coign", "coiffe", "coof", "court"]
+	co_two = ["coapt", "coed", "coinci"]
+
+	pre_one = ["preach"]
+
+	syls = 0 # Added syllable number
+	disc = 0 # Discarded syllable number
+
+	# 1) if letters < 3: return 1
+	if len(word) <= 3:
+		syls = 1
+		return syls
+
+	# 2) if doesn't end with "ted" or "tes" or "ses" or "ied" or "ies", discard "es" and "ed" at the end.
+	# if it has only 1 vowel or 1 set of consecutive vowels, discard. (like "speed", "fled" etc.)
+	if word[-2:] == "es" or word[-2:] == "ed":
+		double_and_triple_1 = len(regex.findall(r"[eaoui][eaoui]", word))
+		if double_and_triple_1 > 1 or len(regex.findall(r"[eaoui][^eaoui]", word)) > 1:
+			if word[-3:] == "ted" or word[-3:] == "tes" or word[-3:] == "ses" or word[-3:] == "ied" or word[-3:] == "ies":
+				pass
+			else:
+				disc += 1
+
+	# 3) discard trailing "e", except where ending is "le"
+	le_except = ["whole", "mobile", "pole", "male", "female", "hale", "pale", "tale", "sale", "aisle", "whale", "while"]
+
+	if word[-1:] == "e":
+		if word[-2:] == "le" and word not in le_except:
+			pass
+
+		else:
+			disc += 1
+
+	# 4) check if consecutive vowels exists, triplets or pairs, count them as one.
+	double_and_triple = len(regex.findall(r"[eaoui][eaoui]", word))
+	tripple = len(regex.findall(r"[eaoui][eaoui][eaoui]", word))
+	disc += double_and_triple + tripple
+
+	# 5) count remaining vowels in word.
+	num_vowels = len(regex.findall(r"[eaoui]", word))
+
+	# 6) add one if starts with "mc"
+	if word[:2] == "mc":
+		syls += 1
+
+	# 7) add one if ends with "y" but is not surrouned by vowel
+	if word[-1:] == "y" and word[-2] not in "aeoui":
+		syls += 1
+
+	# 8) add one if "y" is surrounded by non-vowels and is not in the last word.
+	for i, j in enumerate(word):
+		if j == "y":
+			if (i != 0) and (i != len(word) - 1):
+				if word[i - 1] not in "aeoui" and word[i + 1] not in "aeoui":
+					syls += 1
+
+	# 9) if starts with "tri-" or "bi-" and is followed by a vowel, add one.
+	if word[:3] == "tri" and word[3] in "aeoui":
+		syls += 1
+
+	if word[:2] == "bi" and word[2] in "aeoui":
+		syls += 1
+
+	# 10) if ends with "-ian", should be counted as two syllables, except for "-tian" and "-cian"
+	if word[-3:] == "ian":
+	# and (word[-4:] != "cian" or word[-4:] != "tian"):
+		if word[-4:] == "cian" or word[-4:] == "tian":
+			pass
+		else:
+			syls += 1
+
+	# 11) if starts with "co-" and is followed by a vowel, check if exists in the double syllable dictionary, if not, check if in single dictionary and act accordingly.
+	if word[:2] == "co" and word[2] in "eaoui":
+
+		if word[:4] in co_two or word[:5] in co_two or word[:6] in co_two:
+			syls += 1
+		elif word[:4] in co_one or word[:5] in co_one or word[:6] in co_one:
+			pass
+		else:
+			syls += 1
+
+	# 12) if starts with "pre-" and is followed by a vowel, check if exists in the double syllable dictionary, if not, check if in single dictionary and act accordingly.
+	if word[:3] == "pre" and word[3] in "eaoui":
+		if word[:6] in pre_one:
+			pass
+		else:
+			syls += 1
+
+	# 13) check for "-n't" and cross match with dictionary to add syllable.
+	negative = ["doesn't", "isn't", "shouldn't", "couldn't", "wouldn't"]
+
+	if word[-3:] == "n't":
+		if word in negative:
+			syls += 1
+		else:
+			pass
+
+	# 14) Handling the exceptional words.
+	if word in exception_del:
+		disc += 1
+
+	if word in exception_add:
+		syls += 1
+
+	# Calculate the output
+	return num_vowels - disc + syls
+
+def get_word_count(xhtml: str) -> int:
 	"""
 	Get the word count from an XHTML string.
 
@@ -24,9 +191,12 @@ def word_count(xhtml: str) -> int:
 	The number of words in the XHTML string.
 	"""
 
+	# Remove MathML
+	xhtml = regex.sub(r"<(m:)?math.+?</(m:)?math>", " ", xhtml)
+
 	# Remove HTML tags
 	xhtml = regex.sub(r"<title>.+?</title>", " ", xhtml)
-	xhtml = regex.sub(r"<.+?>", "", xhtml, flags=regex.DOTALL)
+	xhtml = regex.sub(r"<.+?>", " ", xhtml, flags=regex.DOTALL)
 
 	# Replace some formatting characters
 	xhtml = regex.sub(r"[…–—― ‘’“”\{\}\(\)]", " ", xhtml, flags=regex.IGNORECASE | regex.DOTALL)
@@ -209,7 +379,7 @@ def remove_tags(text: str) -> str:
 
 	return regex.sub(r"</?([a-z]+)[^>]*?>", "", text, flags=regex.DOTALL)
 
-def ordinal(number: str) -> str:
+def get_ordinal(number: str) -> str:
 	"""
 	Given an string representing an integer, return a string of the integer followed by its ordinal, like "nd" or "rd".
 

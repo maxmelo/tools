@@ -39,7 +39,7 @@ def main() -> int:
 				se.print_error("Couldn’t open file: {}".format(filename))
 				exit(1)
 
-			word_count = se.formatting.word_count(xhtml)
+			word_count = se.formatting.get_word_count(xhtml)
 			word_count_sum += word_count
 
 			if args.verbose:

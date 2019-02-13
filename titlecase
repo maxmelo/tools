@@ -2,7 +2,6 @@
 
 import sys
 import argparse
-import sys
 import se.formatting
 
 
@@ -26,6 +25,8 @@ def main() -> int:
 			print(se.formatting.titlecase(line))
 		else:
 			print(se.formatting.titlecase(line), end="")
+
+	return 0
 
 
 if __name__ == "__main__":

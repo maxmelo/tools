@@ -81,7 +81,7 @@ def main() -> int:
 					if revision == 1:
 						colophon_xhtml = regex.sub(r"<span class=\"release-date\">.+?</span>", "<span class=\"release-date\">{}</span>".format(friendly_timestamp), colophon_xhtml)
 					else:
-						ordinal = se.formatting.ordinal(revision)
+						ordinal = se.formatting.get_ordinal(revision)
 						if "<p>This is the first edition of this ebook.<br/>" in colophon_xhtml:
 							colophon_xhtml = colophon_xhtml.replace("This edition was released on<br/>", "The first edition was released on<br/>")
 							colophon_xhtml = colophon_xhtml.replace("<p>This is the first edition of this ebook.<br/>", "<p>This is the <span class=\"revision-number\">{}</span> edition of this ebook.<br/>\n\t\t\tThis edition was released on<br/>\n\t\t\t<span class=\"revision-date\">{}</span><br/>".format(ordinal, friendly_timestamp))

@@ -2,7 +2,6 @@
 
 import sys
 import argparse
-import sys
 import roman
 import se
 
@@ -28,11 +27,11 @@ def main() -> int:
 				print(roman.fromRoman(line.upper()))
 			else:
 				print(roman.fromRoman(line.upper()), end="")
-
 		except roman.InvalidRomanNumeralError:
 			se.print_error("Not a Roman numeral: {}".format(line))
-			exit(1)
+			return se.InvalidInputException.code
 
+	return 0
 
 if __name__ == "__main__":
 	sys.exit(main())
