@@ -3,7 +3,7 @@
 import sys
 import argparse
 import se
-import se.formatting
+import se.images
 
 
 def main() -> int:
@@ -13,7 +13,7 @@ def main() -> int:
 	args = parser.parse_args()
 
 	try:
-		se.formatting.render_mathml_to_png(args.mathml_fragment, args.output_filename)
+		se.images.render_mathml_to_png(args.mathml_fragment, args.output_filename)
 	except se.SeException as ex:
 		se.print_error(ex)
 		return ex.code

@@ -6,6 +6,7 @@ import os
 import se
 from se.se_epub import SeEpub
 
+
 def main() -> int:
 	parser = argparse.ArgumentParser(description="Build ebook covers and titlepages for a Standard Ebook source directory, and place the output in DIRECTORY/src/epub/images/.")
 	parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import se
-from lxml import etree, cssselect
 import regex
+from lxml import etree, cssselect
+import se
 
 
 class EasyXmlTree:

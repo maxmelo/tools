@@ -6,6 +6,7 @@ import os
 import regex
 import se
 
+
 def output(chapter_number: int, header_xhtml: str, chapter_xhtml: str) -> None:
 	"""
 	Helper function to write a file given the chapter number, header XHTML, and chapter body XHTML.

@@ -23,6 +23,7 @@ import se.easy_xml
 import se.epub
 import se.mobi
 import se.typography
+import se.images
 
 
 COVER_SVG_WIDTH = 1400
@@ -781,7 +782,7 @@ def main() -> int:
 									if regex.findall("</?(?:m:)?m", processed_line):
 										# Failure! Abandon all hope, and use Firefox to convert the MathML to PNG.
 										try:
-											se.formatting.render_mathml_to_png(regex.sub(r"<(/?)m:", "<\\1", line), os.path.join(work_epub_root_directory, "epub", "images", "mathml-{}.png".format(mathml_count)))
+											se.images.render_mathml_to_png(regex.sub(r"<(/?)m:", "<\\1", line), os.path.join(work_epub_root_directory, "epub", "images", "mathml-{}.png".format(mathml_count)))
 										except se.SeException as ex:
 											se.print_error(ex)
 											return ex.code

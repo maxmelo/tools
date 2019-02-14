@@ -82,7 +82,8 @@ class SeEpub:
 		with open(os.path.join(self.directory, "src", "epub", "content.opf"), "r+", encoding="utf-8") as file:
 			self.__metadata_xhtml = file.read()
 
-	def __get_malformed_urls(self, xhtml: str) -> list:
+	@staticmethod
+	def __get_malformed_urls(xhtml: str) -> list:
 		"""
 		Helper function used in self.lint()
 		Get a list of URLs in the epub that do not match SE standards.
@@ -198,7 +199,8 @@ class SeEpub:
 
 		return unused_selectors
 
-	def __new_bs4_tag(self, section: Tag, output_soup: BeautifulSoup) -> Tag:
+	@staticmethod
+	def __new_bs4_tag(section: Tag, output_soup: BeautifulSoup) -> Tag:
 		"""
 		Helper function used in self.recompose()
 		Create a new BS4 tag given the current section.
@@ -434,6 +436,16 @@ class SeEpub:
 		return xhtml
 
 	def generate_titlepage_svg(self) -> None:
+		"""
+		Generate a distributable titlepage SVG in ./src/epub/images/ based on the titlepage file in ./images/
+
+		INPUTS
+		None
+
+		OUTPUTS
+		None.
+		"""
+
 		inkscape_path = shutil.which("inkscape")
 
 		if inkscape_path is None:
@@ -460,6 +472,16 @@ class SeEpub:
 				file.truncate()
 
 	def generate_cover_svg(self) -> None:
+		"""
+		Generate a distributable cover SVG in ./src/epub/images/ based on the cover file in ./images/
+
+		INPUTS
+		None
+
+		OUTPUTS
+		None.
+		"""
+
 		inkscape_path = shutil.which("inkscape")
 
 		if inkscape_path is None:

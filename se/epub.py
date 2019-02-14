@@ -4,9 +4,9 @@ import os
 import zipfile
 import itertools
 import regex
+from lxml import etree
 import se
 import se.easy_xml
-from lxml import etree
 
 
 def convert_toc_to_ncx(epub_root_absolute_path: str, toc_filename: str, xsl_filename: str) -> se.easy_xml.EasyXmlTree:

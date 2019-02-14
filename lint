@@ -2,7 +2,6 @@
 
 import sys
 import argparse
-import os
 from termcolor import colored
 import se
 from se.se_epub import SeEpub
