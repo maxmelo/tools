@@ -12,6 +12,86 @@ from titlecase import titlecase as pip_titlecase
 import se
 
 
+def semanticate(xhtml: str) -> str:
+	"""
+	Add semantics to well-formed XHTML
+
+	INPUTS
+	xhtml: A string of well-formed XHTML
+
+	OUTPUTS
+	A string of XHTML with semantics added.
+	"""
+
+	# Some common abbreviations
+	xhtml = regex.sub(r"(?<!\<abbr\>)Mr\.", r"<abbr>Mr.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Mrs\.", r"<abbr>Mrs.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Ms\.", r"<abbr>Ms.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Dr\.", r"<abbr>Dr.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Drs\.", r"<abbr>Drs.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Prof\.", r"<abbr>Prof.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Rev\.", r"<abbr>Rev.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Hon\.", r"<abbr>Hon.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Lieut\.", r"<abbr>Lieut.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Fr\.", r"<abbr>Fr.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Lt\.", r"<abbr>Lt.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Capt\.", r"<abbr>Capt.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Pvt\.", r"<abbr>Pvt.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Esq\.", r"<abbr>Esq.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Mt\.", r"<abbr>Mt.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)MM\.", r"<abbr>MM.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Mme\.", r"<abbr>Mme.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Mmes\.", r"<abbr>Mmes.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Mon\.", r"<abbr>Mon.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Mlle\.", r"<abbr>Mlle.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Mdlle\.", r"<abbr>Mdlle.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Mlles\.", r"<abbr>Mlles.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Messrs\.", r"<abbr>Messrs.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Messers\.", r"<abbr>Messers.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)P\.S\.", r"<abbr>P.S.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Co\.", r"<abbr>Co.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Inc\.", r"<abbr>Inc.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)Ltd\.", r"<abbr>Ltd.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)St\.", r"<abbr>St.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)([Vv])iz\.", r"<abbr>\1iz.</abbr>", xhtml)
+	xhtml = regex.sub(r"(\b)(?<!\<abbr\>)etc\.", r"\1<abbr>etc.</abbr>", xhtml)
+	xhtml = regex.sub(r"(\b)(?<!\<abbr\>)([Cc])f\.", r"\1<abbr>\2f.</abbr>", xhtml)
+	xhtml = regex.sub(r"(\b)(?<!\<abbr\>)p\.([\s0-9])", r"\1<abbr>p.</abbr>\2", xhtml)
+	xhtml = regex.sub(r"(\b)(?<!\<abbr\>)ed\.", r"\1<abbr>ed.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)([Ii])\.e\.", r"<abbr>\1.e.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)([Ee])\.g\.", r"<abbr>\1.g.</abbr>", xhtml)
+	xhtml = regex.sub(r"(\b)(?<!\<abbr\>)([Ll])b\.", r"\1<abbr>\2b.</abbr>", xhtml)
+	xhtml = regex.sub(r"(\b)(?<!\<abbr\>)([Ll])bs\.", r"\1<abbr>\2bs.</abbr>", xhtml)
+	xhtml = regex.sub(r"(\b)(?<!\<abbr\>)([Oo])z\.", r"\1<abbr>\2z.</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)(Jan\.|Feb\.|Mar\.|Apr\.|Jun\.|Jul\.|Aug\.|Sep\.|Sept\.|Oct\.|Nov\.|Dec\.)", r"<abbr>\1</abbr>", xhtml)
+	xhtml = regex.sub(r"(?<!\<abbr\>)No\.(\s+[0-9]+)", r"<abbr>No.</abbr>\1", xhtml)
+	xhtml = regex.sub(r"""(?<!\<abbr class="degree"\>)PhD""", r"""<abbr class="degree">PhD</abbr>""", xhtml)
+	xhtml = regex.sub(r"""(?<!\<abbr class="initialism"\>)IOU""", r"""<abbr class="initialism">IOU</abbr>""", xhtml)
+	xhtml = regex.sub(r"""(?<!\<abbr class="era"\>)A\.?D""", r"""<abbr class="era">AD</abbr>""", xhtml)
+	xhtml = regex.sub(r"""(?<!\<abbr class="era"\>)B\.?C""", r"""<abbr class="era">BC</abbr>""", xhtml)
+	xhtml = regex.sub(r"""(?<!\<abbr class="time( eoc)?"\>)([ap])\.\s?m\.""", r"""<abbr class="time">\2.m.</abbr>""", xhtml)
+
+	# Guess at adding eoc class
+	xhtml = regex.sub(r"""<abbr>([a-zA-Z\.]+?\.)</abbr></p>""", r"""<abbr class="eoc">\1</abbr></p>""", xhtml)
+	xhtml = regex.sub(r"""<abbr>etc\.</abbr>(\s+[A-Z])""", r"""<abbr class="eoc">etc.</abbr>\1""", xhtml)
+
+	# Clean up nesting errors
+	xhtml = regex.sub(r"""<abbr class="eoc"><abbr>([^<]+)</abbr></abbr>""", r"""<abbr class="eoc">\1</abbr>""", xhtml)
+
+	# Get Roman numerals >= 2 characters
+	# We only wrap these if they're standalone (i.e. not already wrapped in a tag) to prevent recursion in multiple runs
+	xhtml = regex.sub(r"([^a-zA-Z>])([ixvIXV]{2,})(\b)", r"""\1<span epub:type="z3998:roman">\2</span>\3""", xhtml)
+
+	# Get Roman numerals that are X or V and single characters.  We can't do I for obvious reasons.
+	xhtml = regex.sub(r"""([^a-zA-Z>\"])([vxVX])(\b)""", r"""\1<span epub:type="z3998:roman">\2</span>\3""", xhtml)
+
+	# We may have added HTML tags within title tags.  Remove those here
+	matches = regex.findall(r"<title>.+?</title>", xhtml)
+	if matches:
+		xhtml = regex.sub(r"<title>.+?</title>", "<title>" +  se.formatting.remove_tags(matches[0]) + "</title>", xhtml)
+
+	return xhtml
+
 def get_flesch_reading_ease(xhtml: str) -> float:
 	"""
 	Get the Flesch reading ease of some XHTML.
