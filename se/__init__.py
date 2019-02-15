@@ -2,6 +2,7 @@
 
 import sys
 import os
+import argparse
 from typing import Union
 from textwrap import wrap
 from termcolor import colored
@@ -192,6 +193,18 @@ def print_table(table_data: list, wrap_column: bool = None) -> None:
 			row[wrap_column] = '\n'.join(wrap(row[wrap_column], max_width))
 
 	print(table.table)
+
+def is_positive_integer(value: str) -> int:
+	"""
+	Helper function for argparse.
+	Raise an exception if value is not a positive integer.
+	"""
+
+	int_value = int(value)
+	if int_value <= 0:
+		raise argparse.ArgumentTypeError("{} is not a positive integer".format(value))
+
+	return int_value
 
 def get_target_filenames(targets: list, allowed_extensions: tuple, ignore_se_files: bool = True) -> set:
 	"""

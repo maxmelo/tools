@@ -9,6 +9,7 @@ import datetime
 import errno
 import shutil
 import fnmatch
+import concurrent.futures
 import base64
 import unicodedata
 import subprocess
@@ -24,6 +25,29 @@ import se.formatting
 import se.easy_xml
 import se.images
 
+def _SeEpub__process_endnotes_in_file(filename: str, root: str, note_range: range, step: int) -> None:
+	"""
+	Helper function for reordering endnotes.
+	"""
+
+	with open(os.path.join(root, filename), "r+", encoding="utf-8") as file:
+		xhtml = file.read()
+		processed_xhtml = xhtml
+		processed_xhtml_is_modified = False
+
+		for endnote_number in note_range:
+			# If we’ve already changed some notes and can’t find the next then we don’t need to continue searching
+			if not "id=\"noteref-{}\"".format(endnote_number) in processed_xhtml and processed_xhtml_is_modified:
+				break
+			processed_xhtml = processed_xhtml.replace("id=\"noteref-{}\"".format(endnote_number), "id=\"noteref-{}\"".format(endnote_number + step), 1)
+			processed_xhtml = processed_xhtml.replace("#note-{}\"".format(endnote_number), "#note-{}\"".format(endnote_number + step), 1)
+			processed_xhtml = processed_xhtml.replace(">{}</a>".format(endnote_number), ">{}</a>".format(endnote_number + step), 1)
+			processed_xhtml_is_modified = processed_xhtml_is_modified or (processed_xhtml != xhtml)
+
+		if processed_xhtml_is_modified:
+			file.seek(0)
+			file.write(processed_xhtml)
+			file.truncate()
 
 class LintMessage:
 	"""
@@ -58,6 +82,10 @@ class SeEpub:
 
 	@property
 	def generated_identifier(self) -> str:
+		"""
+		Accessor
+		"""
+
 		if not self.__generated_identifier:
 			self.__generated_identifier = self.__generate_identifier()
 
@@ -65,6 +93,10 @@ class SeEpub:
 
 	@property
 	def generated_github_repo_url(self) -> str:
+		"""
+		Accessor
+		"""
+
 		if not self.__generated_github_repo_url:
 			self.__generated_github_repo_url = self.__generate_github_repo_url()
 
@@ -536,6 +568,64 @@ class SeEpub:
 					file.write(svg)
 					file.truncate()
 
+	def reorder_endnotes(self, target_endnote_number: int, step: int = 1) -> None:
+		"""
+		Reorder endnotes starting at target_endnote_number.
+
+		INPUTS:
+		target_endnote_number: The endnote to start reordering at
+		step: 1 to increment or -1 to decrement
+
+		OUTPUTS:
+		None.
+		"""
+
+		increment = step == 1
+		endnote_count = 0
+		source_directory = os.path.join(self.directory, "src")
+
+		try:
+			endnotes_filename = os.path.join(source_directory, "epub", "text", "endnotes.xhtml")
+			with open(endnotes_filename, "r+", encoding="utf-8") as file:
+				xhtml = file.read()
+				soup = BeautifulSoup(xhtml, "lxml")
+
+				endnote_count = len(soup.select("li[id^=note-]"))
+
+				if increment:
+					note_range = range(endnote_count, target_endnote_number - 1, -1)
+				else:
+					note_range = range(target_endnote_number, endnote_count + 1, 1)
+
+				for endnote_number in note_range:
+					xhtml = xhtml.replace("id=\"note-{}\"".format(endnote_number), "id=\"note-{}\"".format(endnote_number + step), 1)
+					xhtml = xhtml.replace("#noteref-{}\"".format(endnote_number), "#noteref-{}\"".format(endnote_number + step), 1)
+
+				# There may be some links within the notes that refer to other endnotes.
+				# These potentially need incrementing / decrementing too. This code assumes
+				# a link that looks something like <a href="#note-1">note 1</a>.
+				endnote_links = regex.findall(r"href=\"#note-(\d+)\"(.*?) (\d+)</a>", xhtml)
+				for link in endnote_links:
+					link_number = int(link[0])
+					if (link_number < target_endnote_number and increment) or (link_number > target_endnote_number and not increment):
+						continue
+					xhtml = xhtml.replace("href=\"#note-{0}\"{1} {0}</a>".format(link[0], link[1]), "href=\"#note-{0}\"{1} {0}</a>".format(link_number + step, link[1]))
+
+				file.seek(0)
+				file.write(xhtml)
+				file.truncate()
+
+		except Exception:
+			raise se.InvalidSeEbookException("Couldn’t open endnotes file: {}".format(endnotes_filename))
+
+		with concurrent.futures.ProcessPoolExecutor() as executor:
+			for root, _, filenames in os.walk(source_directory):
+				for filename in fnmatch.filter(filenames, "*.xhtml"):
+					# Skip endnotes.xhtml since we already processed it
+					if filename == "endnotes.xhtml":
+						continue
+
+					executor.submit(__process_endnotes_in_file, filename, root, note_range, step)
 
 	def update_revision(self) -> None:
 		"""
