@@ -372,7 +372,11 @@ def main() -> int:
 					# xpath won't find anything at all.  See http://stackoverflow.com/questions/297239/why-doesnt-xpath-work-when-processing-an-xhtml-document-with-lxml-in-python
 					xhtml = file.read().replace(" xmlns=\"http://www.w3.org/1999/xhtml\"", "")
 					processed_xhtml = xhtml
-					tree = etree.fromstring(str.encode(xhtml))
+					try:
+						tree = etree.fromstring(str.encode(xhtml))
+					except Exception as ex:
+						se.print_error("Error parsing XHTML file: {}\n{}".format(filename, ex), args.verbose)
+						exit(1)
 
 					# Now iterate over each CSS selector and see if it's used in any of the files we found
 					force_convert = False
@@ -690,7 +694,11 @@ def main() -> int:
 
 							# We have to remove the default namespace declaration from our document, otherwise
 							# xpath won't find anything at all.  See http://stackoverflow.com/questions/297239/why-doesnt-xpath-work-when-processing-an-xhtml-document-with-lxml-in-python
-							tree = etree.fromstring(str.encode(xhtml.replace(" xmlns=\"http://www.w3.org/1999/xhtml\"", "")))
+							try:
+								tree = etree.fromstring(str.encode(xhtml.replace(" xmlns=\"http://www.w3.org/1999/xhtml\"", "")))
+							except Exception as ex:
+								se.print_error("Error parsing XHTML file: {}\n{}".format(filename, ex), args.verbose)
+								exit(1)
 
 							add_kobo_spans_to_node(tree.xpath("./body", namespaces=se.XHTML_NAMESPACES)[0])
 
@@ -941,7 +949,11 @@ def main() -> int:
 
 					# We have to remove the default namespace declaration from our document, otherwise
 					# xpath won't find anything at all.  See http://stackoverflow.com/questions/297239/why-doesnt-xpath-work-when-processing-an-xhtml-document-with-lxml-in-python
-					tree = etree.fromstring(str.encode(xhtml.replace(" xmlns=\"http://www.w3.org/1999/xhtml\"", "")))
+					try:
+						tree = etree.fromstring(str.encode(xhtml.replace(" xmlns=\"http://www.w3.org/1999/xhtml\"", "")))
+					except Exception as ex:
+						se.print_error("Error parsing XHTML file: endnotes.xhtml\n{}".format(ex), args.verbose)
+						exit(1)
 
 					notes = tree.xpath("//li[@epub:type=\"rearnote\" or @epub:type=\"footnote\"]", namespaces=se.XHTML_NAMESPACES)
 
